@@ -9,9 +9,9 @@ def nothing(x):
 cap = cv2.VideoCapture(2) # reads from 2nd camera (cv2.VideoCapture(0) is the webcam)
 
 # creates window named "HSV"
+cv2.namedWindow('Stock')
 cv2.namedWindow('HSV')
 
-# creates 3 trackbars in window HSV
 # creates 6 trackbars in window HSV, hi/low thresholds
 cv2.createTrackbar('hl','HSV',0,255,nothing) # (trackbar caption, parent window, preset val, max val,function called when trackbar moves)
 cv2.createTrackbar('hh','HSV',0,255,nothing)
@@ -32,8 +32,6 @@ while True: # starts loop to run camera
     # Display the resulting frame
     #cv2.imshow('frame1',frame) # displays raw feed
     #cv2.imshow('frame2',gray) # displays grayscale feed
-    cv2.imshow('HSV',hsv) # displays HSV feed
-
 
     # get current positions of four trackbars
     hl = cv2.getTrackbarPos('hh','HSV') # name of trackbar, name of parent window
@@ -42,6 +40,14 @@ while True: # starts loop to run camera
     sh = cv2.getTrackbarPos('sv','HSV')
     vl = cv2.getTrackbarPos('vl','HSV')
     vh = cv2.getTrackbarPos('vh','HSV')
+
+    hsvl = np.array([hl,sl,vl])
+    hsvh = np.array([hh,sh,vh])
+
+    mask = cv2.inRange(hsv, hsvl, hsvh)
+
+    cv2.imshow('Stock',hsv) # displays HSV feed
+    cv2.imshow('HSV',mask) # displays HSV feed
 
     if cv2.waitKey(1) & 0xFF == ord('q'): # quits program if 'q' is pressed
         break

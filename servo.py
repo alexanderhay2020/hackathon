@@ -1,45 +1,46 @@
 # Servo controlled camera for hackathon
 
 import serial
+import time
 
-#ser=serial.Serial('/dev/ttyACM0',baudrate=9600)
+ser=serial.Serial('/dev/ttyACM2',baudrate=9600)
 
-print 'enter angle between 0 and 90'
-input=float(raw_input())
+# calib=3968 # 0 degree angle
+calib=5984 # 45 degree angle
+# calib=8000 # 90 degree angle
+print calib
 
-# check if input is valid
-#while input<0 or input>90 or input==int:
-#            print 're-enter angle between 0 and 90'
-#        input=raw_input()
+ser.write('\x84\x00'+chr(calib & 127) + chr((calib & 16256) >> 7))
+ser.write('\x84\x01'+chr(calib & 127) + chr((calib & 16256) >> 7))
 
-# 992 - 1500 - 2000 . . . shortest - middle - longest in us
+# sets servos to calib value
+print 'set step'
+step=int(raw_input())
+place=5984
 
-output = ((1008*(input/90))+992)*4 # 2000-992=1008
+def arrow():
 
-# input/90 gives us a percentage
-# (percentage*the range) + the minimum of the range gives us a final spot
-# *4 because we're operating in quarter microseconds (us)
+    print 'arrow'
+    input=str(raw_input())
+    print input
+    global place
 
+    if input=='\x1b[A': #up
+        print 'up'
+        place=place+step
+        ser.write('\x84\x01'+chr(place & 127) + chr(((place & 16256) >> 7)))
+    if input=='\x1b[B': #down
+        print 'down'
+        place=place-step
+        ser.write('\x84\x01'+chr(place & 127) + chr(((place & 16256) >> 7)))
+    if input=='\x1b[D': #left
+        print 'left'
+        place=place+step
+        ser.write('\x84\x00'+chr(place & 127) + chr(((place & 16256) >> 7)))
+    if input=='\x1b[C': #right
+        print 'right'
+        place=place-step
+        ser.write('\x84\x00'+chr(place & 127) + chr(((place & 16256) >> 7)))
 
-#lowerbits='0'+'str(bin(int(output)))[-7:]
-bits=str(bin(int(output)))[2:]
-lowerbits='0'+bits[-7:]
-# int() to give bin() a proper argument
-# convert bin to a string
-# call for the last 7 digits
-# insert a '0' at the beginning of the string
-# lowerbits='0'+(str(bin(int(output)))[2:])[-7:] # does it all in one line
-
-upperbits=bits[:(len(bits)-7)] # retrieves the first bits not called from lower lowerbits
-
-hexlb=hex(int(lowerbits,2))[1:] # produces a string of the hex value to pass to .write
-hexub=hex(int(upperbits,2))[1:] #same thing
-
-for prefix in range(8-len(upperbits)):
-    upperbits='0'+upperbits
-
-    # adds 0's to upperbits to prep for hex conversion
-
-print output
-
-ser.write('\x84\x00\x40\x3E')
+while True:
+    arrow()

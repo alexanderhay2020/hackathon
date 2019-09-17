@@ -12,9 +12,13 @@ cap = cv2.VideoCapture(2) # reads from 2nd camera (cv2.VideoCapture(0) is the we
 cv2.namedWindow('HSV')
 
 # creates 3 trackbars in window HSV
-cv2.createTrackbar('H','HSV',0,255,nothing) # (trackbar caption, parent window, preset val, max val,function called when trackbar moves)
-cv2.createTrackbar('S','HSV',0,255,nothing)
-cv2.createTrackbar('V','HSV',0,255,nothing)
+# creates 6 trackbars in window HSV, hi/low thresholds
+cv2.createTrackbar('hl','HSV',0,255,nothing) # (trackbar caption, parent window, preset val, max val,function called when trackbar moves)
+cv2.createTrackbar('hh','HSV',0,255,nothing)
+cv2.createTrackbar('sl','HSV',0,255,nothing)
+cv2.createTrackbar('sh','HSV',0,255,nothing)
+cv2.createTrackbar('vl','HSV',0,255,nothing)
+cv2.createTrackbar('vh','HSV',0,255,nothing)
 
 while True: # starts loop to run camera
 
@@ -22,7 +26,7 @@ while True: # starts loop to run camera
     ret, frame = cap.read() # returns value of the feed, the image itself
 
     # Our operations on the frame come here
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # converts feed to grayscale
+    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # converts feed to grayscale
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV) # converts feed to HSV
 
     # Display the resulting frame
@@ -32,9 +36,12 @@ while True: # starts loop to run camera
 
 
     # get current positions of four trackbars
-    h = cv2.getTrackbarPos('H','HSV') # name of trackbar, name of parent window
-    s = cv2.getTrackbarPos('S','HSV')
-    v = cv2.getTrackbarPos('V','HSV')
+    hl = cv2.getTrackbarPos('hh','HSV') # name of trackbar, name of parent window
+    hh = cv2.getTrackbarPos('hl','HSV')
+    sl = cv2.getTrackbarPos('sl','HSV')
+    sh = cv2.getTrackbarPos('sv','HSV')
+    vl = cv2.getTrackbarPos('vl','HSV')
+    vh = cv2.getTrackbarPos('vh','HSV')
 
     if cv2.waitKey(1) & 0xFF == ord('q'): # quits program if 'q' is pressed
         break

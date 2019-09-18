@@ -9,11 +9,10 @@ def nothing(x):
 cap = cv2.VideoCapture(2) # reads from 2nd camera (cv2.VideoCapture(0) is the webcam)
 #img = cv2.imread('/path/to/file.xxx',0) # reads image from a file
 
-# creates windows named "Stock" and "HSV"
-cv2.namedWindow('Stock')
+# creates windows named "HSV". Name can be an str variable
 cv2.namedWindow('HSV')
 
-# creates 6 trackbars in window HSV, hi/low thresholds
+# creates 6 trackbars in window HSV, sets hi/low thresholds
 cv2.createTrackbar('hl','HSV',0,255,nothing) # (trackbar caption, parent window, preset val, max val,function called when trackbar moves)
 cv2.createTrackbar('hh','HSV',0,255,nothing)
 cv2.createTrackbar('sl','HSV',0,255,nothing)
@@ -21,17 +20,9 @@ cv2.createTrackbar('sh','HSV',0,255,nothing)
 cv2.createTrackbar('vl','HSV',0,255,nothing)
 cv2.createTrackbar('vh','HSV',0,255,nothing)
 
-while True: # starts loop to run camera
+def filter(img):
 
-    # read current frame
-    ret, frame = cap.read() # returns value of the feed, the image itself
-
-    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # converts feed to grayscale
-    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV) # converts feed to HSV
-
-    # Display the resulting frame
-    #cv2.imshow('frame1',frame) # displays raw feed
-    #cv2.imshow('frame2',gray) # displays grayscale feed
+    hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
 
     # get current positions of four trackbars
     hl = cv2.getTrackbarPos('hl','HSV') # name of trackbar, name of parent window (both ban be variables w/ strings)
@@ -41,18 +32,29 @@ while True: # starts loop to run camera
     vl = cv2.getTrackbarPos('vl','HSV')
     vh = cv2.getTrackbarPos('vh','HSV')
 
-    hsvl = np.array([hl,sl,vl])
-    hsvh = np.array([hh,sh,vh])
+    #hsvl = np.array([hl,sl,vl])
+    hsvl = np.array([0,137,77])  # filter for red ball
+    #hsvh = np.array([hh,sh,vh])
+    hsvh = np.array([5,255,255])
 
-    mask = cv2.inRange(hsv, hsvl, hsvh) #inRange(image, lower_threshold_list, upper_threshold_list)
+    # applies threshold mask from hi/low HSV values
+    mask = cv2.inRange(hsv, hsvl, hsvh)
+    # applies Gaussian Blur
+    blur = cv2.GaussianBlur(mask,(7,7),0)
+    # applies mask to input img
+    img=cv2.bitwise_and(img,img,mask=blur)
+    # convert to grayscale
+    img=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    
+    return img
 
-    # adds text to window
-    #cv2.putText(mask,'Lower HSV: [' + str(lh) +',' + str(ls) + ',' + str(lv) + ']', (10,30), font, 0.5, (200,255,155), 1, cv2.LINE_AA)
-    #cv2.putText(mask,'Upper HSV: [' + str(uh) +',' + str(us) + ',' + str(uv) + ']', (10,60), font, 0.5, (200,255,155), 1, cv2.LINE_AA)
+while True: # starts loop to run camera
 
-    cv2.imshow('Stock',hsv) # displays image stored in hsv
-    cv2.imshow('HSV',mask) # displays image stored in mask to window 'HSV'
-                           # (window name can be a variable storing a string)
+    # read current frame
+    ret, frame = cap.read() # returns value of the feed, the image itself
+
+    frame=filter(frame)
+    cv2.imshow('HSV',frame) # displays image stored in hsv
 
     if cv2.waitKey(1) & 0xFF == ord('q'): # quits program if 'q' is pressed
         break

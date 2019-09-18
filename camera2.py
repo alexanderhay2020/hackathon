@@ -1,79 +1,90 @@
+# computer vision
+
 import numpy as np
 import cv2
 
-cap = cv2.VideoCapture(0)
-
-cv2.namedWindow('Stock')
-cv2.namedWindow('HSV')
-
 def nothing(x):
-    print("Trackbar value: " + str(x))
     pass
 
-uh = 0 #130
-lh = 0 #110
-us = 0 #255
-ls = 0 #50
-uv = 0 #255
-lv = 0 #50
+cap = cv2.VideoCapture(2) # reads from 2nd camera (cv2.VideoCapture(0) is the webcam)
+#img = cv2.imread('/path/to/file.xxx',0) # reads image from a file
 
-lower_hsv = np.array([lh,ls,lv])
-upper_hsv = np.array([uh,us,uv])
+# creates windows named "Stock" and "HSV"
+cv2.namedWindow('Stock')
+cv2.namedWindow('HSV')
+cv2.namedWindow('Blur')
 
-# create trackbars for Upper HSV
-cv2.createTrackbar('UpperH','HSV',0,255,nothing)
-cv2.setTrackbarPos('UpperH','HSV', uh)
+# creates 6 trackbars in window HSV, hi/low thresholds
+cv2.createTrackbar('hl','HSV',0,255,nothing) # (trackbar caption, parent window, preset val, max val,function called when trackbar moves)
+cv2.createTrackbar('hh','HSV',0,255,nothing)
+cv2.createTrackbar('sl','HSV',0,255,nothing)
+cv2.createTrackbar('sh','HSV',0,255,nothing)
+cv2.createTrackbar('vl','HSV',0,255,nothing)
+cv2.createTrackbar('vh','HSV',0,255,nothing)
+#cv2.createTrackbar('blur','Blur',10,100,nothing)
 
-# create trackbars for Lower HSV
-cv2.createTrackbar('LowerH','HSV',0,255,nothing)
-cv2.setTrackbarPos('LowerH','HSV', lh)
+def filter(img):
 
-cv2.createTrackbar('UpperS','HSV',0,255,nothing)
-cv2.setTrackbarPos('UpperS','HSV', us)
+    hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
 
-cv2.createTrackbar('LowerS','HSV',0,255,nothing)
-cv2.setTrackbarPos('LowerS','HSV', ls)
+    hl = cv2.getTrackbarPos('hl','HSV') # name of trackbar, name of parent window (both ban be variables w/ strings)
+    hh = cv2.getTrackbarPos('hh','HSV')
+    sl = cv2.getTrackbarPos('sl','HSV')
+    sh = cv2.getTrackbarPos('sh','HSV')
+    vl = cv2.getTrackbarPos('vl','HSV')
+    vh = cv2.getTrackbarPos('vh','HSV')
 
-cv2.createTrackbar('UpperV','HSV',0,255,nothing)
-cv2.setTrackbarPos('UpperV','HSV', uv)
+    hsvl = np.array([hl,sl,vl])
+    hsvh = np.array([hh,sh,vh])
 
-cv2.createTrackbar('LowerV','HSV',0,255,nothing)
-cv2.setTrackbarPos('LowerV','HSV', lv)
+    hsvl = np.array([0,137,77)  # filter for red ball
+    hsvh = np.array([5,255,255])
 
-#font = cv2.FONT_HERSHEY_SIMPLEX
+while True: # starts loop to run camera
 
-while True:
+    # read current frame
+    ret, frame = cap.read() # returns value of the feed, the image itself
 
-    ret,frame=cap.read()
+    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # converts feed to grayscale
+    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV) # converts feed to HSV
 
-    # get current positions of trackbars
-    uh = cv2.getTrackbarPos('UpperH','HSV')
-    lh = cv2.getTrackbarPos('LowerH','HSV')
-    us = cv2.getTrackbarPos('UpperS','HSV')
-    ls = cv2.getTrackbarPos('LowerS','HSV')
-    uv = cv2.getTrackbarPos('UpperV','HSV')
-    lv = cv2.getTrackbarPos('LowerV','HSV')
+    # Display the resulting frame
+    #cv2.imshow('frame1',frame) # displays raw feed
+    #cv2.imshow('frame2',gray) # displays grayscale feed
 
-    # store values in a list list to pass to threshold function (inRange function)
-    upper_hsv = np.array([uh,us,uv])
-    lower_hsv = np.array([lh,ls,lv])
+    # get current positions of four trackbars
+    hl = cv2.getTrackbarPos('hl','HSV') # name of trackbar, name of parent window (both ban be variables w/ strings)
+    hh = cv2.getTrackbarPos('hh','HSV')
+    sl = cv2.getTrackbarPos('sl','HSV')
+    sh = cv2.getTrackbarPos('sh','HSV')
+    vl = cv2.getTrackbarPos('vl','HSV')
+    vh = cv2.getTrackbarPos('vh','HSV')
+    #b=cv2.getTrackbarPos('blur','Blur')
+    b=11
+    hsvl = np.array([hl,sl,vl])
+    hsvh = np.array([hh,sh,vh])
 
-    # Convert BGR to HSV
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    #hsvl = np.array([0,130,102])  # resetting hsv thresholds for red ball
+    #hsvh = np.array([28,255,255])
 
-    # Creates threshold image based on HSV values from trackbars
-    # (image matrix, HSV lower values stored as a list, HSV upper values stored as a list)
-    mask = cv2.inRange(hsv, lower_hsv, upper_hsv)
+    mask = cv2.inRange(hsv, hsvl, hsvh) #inRange(image, lower_threshold_list, upper_threshold_list)
+    #frame2 = cv2.bitwise_and(frame,frame,mask=mask) # magical function that applies your filter (mask) to an image
+                                                    # (input image, output image, mask=whatever_your_mask_is)
+    blur = cv2.GaussianBlur(mask,(b,b),0) # (image, blur size as a tuple, 0) blur size should be positive and odd
+    #gray = cv2.cvtColor(blur,cv2.COLOR)
+
+    frame2=cv2.bitwise_and(frame,frame,mask=blur)
 
     # adds text to window
     #cv2.putText(mask,'Lower HSV: [' + str(lh) +',' + str(ls) + ',' + str(lv) + ']', (10,30), font, 0.5, (200,255,155), 1, cv2.LINE_AA)
     #cv2.putText(mask,'Upper HSV: [' + str(uh) +',' + str(us) + ',' + str(uv) + ']', (10,60), font, 0.5, (200,255,155), 1, cv2.LINE_AA)
 
-    # Displays image stored in mask
-    cv2.imshow('HSV',mask)
+    cv2.imshow('Stock',hsv) # displays image stored in hsv
+    cv2.imshow('HSV',frame2) # displays image stored in mask to window 'HSV'
+    cv2.imshow('Blur',blur)
+                           # (window name can be a variable storing a string)
 
-    # kills program when 'esc' is pressed
-    if cv2.waitKey(1) & 0xFF == 27:
+    if cv2.waitKey(1) & 0xFF == ord('q'): # quits program if 'q' is pressed
         break
 
 # When everything done, release the capture

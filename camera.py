@@ -54,7 +54,7 @@ def filter(img): #filters image using various methods
     # convert to grayscale
     img=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
-    return img
+    return mask
 
 while cap.isOpened(): # starts loop to run camera
 
@@ -66,18 +66,24 @@ while cap.isOpened(): # starts loop to run camera
 
     # this section finds and draws circles
 
-    circles = cv2.HoughCircles(filtered_frame, cv2.HOUGH_GRADIENT, 1, 20,
-                              param1=50, param2=30, minRadius=0, maxRadius=0)
-    detected_circles = np.uint16(np.around(circles))
+    # circles = cv2.HoughCircles(filtered_frame, cv2.HOUGH_GRADIENT, 1, 20,
+    #                           param1=50, param2=30, minRadius=0, maxRadius=0)
+    # if circles is not None:
+    #     detected_circles = np.uint16(np.around(circles))
+    #     for (x, y ,r) in detected_circles[0, :]:
+    #         cv.circle(output, (x, y), r, (0, 0, 0), 3)
+    #         cv.circle(output, (x, y), 2, (0, 255, 255), 3)
 
-    cv2.imshow(windowName0,frame)
+
     # this section finds and draws contours
 
-    #contours,hierarchy=cv2.findContours(filtered_frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-    #imgDrawn=cv2.drawContours(filtered_frame, contours, -1, (255,0,0), 5) # draws contours onto img
-    #cv2.imshow(windowName1,imgDrawn)
+    contours,hierarchy=cv2.findContours(filtered_frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    imgDrawn=cv2.drawContours(filtered_frame, contours, -1, (255,0,0), 5) # draws contours onto img
+    cv2.imshow(windowName1,imgDrawn)
+    print contours
+    cv2.waitKey(0) # will wait for input to progress to next frame
 
-    #cv2.waitKey(0) # will wait for input to progress to next frame
+    cv2.imshow(windowName0,frame)
 
     if cv2.waitKey(1)&0xFF==ord('q'): # quits program if 'q' is pressed
         break
